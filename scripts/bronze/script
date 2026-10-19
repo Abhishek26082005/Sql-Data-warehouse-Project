@@ -1,1 +1,70 @@
+DELIMITER //
 
+DROP PROCEDURE IF EXISTS bronze.load_bronze //
+
+CREATE PROCEDURE bronze.load_bronze()
+BEGIN
+    DECLARE start_time DATETIME;
+    DECLARE end_time DATETIME;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT 'ERROR OCCURRED DURING BRONZE PROCESS' AS message;
+        RESIGNAL;
+    END;
+
+    SET start_time = NOW();
+
+    SELECT 'Loading Bronze Layer Started' AS message;
+
+    -- CRM TABLES
+    TRUNCATE TABLE bronze.crm_cust_info;
+    TRUNCATE TABLE bronze.crm_prd_info;
+    TRUNCATE TABLE bronze.crm_sales_details;
+
+    -- ERP TABLES
+    TRUNCATE TABLE bronze.erp_loc_a101;
+    TRUNCATE TABLE bronze.erp_cust_az12;
+    TRUNCATE TABLE bronze.erp_px_cat_g1v2;
+
+    SET end_time = NOW();
+
+    SELECT
+        'Bronze Tables Truncated' AS status,
+        start_time,
+        end_time,
+        TIMESTAMPDIFF(SECOND, start_time, end_time)
+            AS duration_seconds;
+
+    -- ROW COUNT VERIFICATION
+    SELECT 'crm_cust_info' AS table_name, COUNT(*) AS total_rows
+    FROM bronze.crm_cust_info
+
+    UNION ALL
+
+    SELECT 'crm_prd_info', COUNT(*)
+    FROM bronze.crm_prd_info
+
+    UNION ALL
+
+    SELECT 'crm_sales_details', COUNT(*)
+    FROM bronze.crm_sales_details
+
+    UNION ALL
+
+    SELECT 'erp_loc_a101', COUNT(*)
+    FROM bronze.erp_loc_a101
+
+    UNION ALL
+
+    SELECT 'erp_cust_az12', COUNT(*)
+    FROM bronze.erp_cust_az12
+
+    UNION ALL
+
+    SELECT 'erp_px_cat_g1v2', COUNT(*)
+    FROM bronze.erp_px_cat_g1v2;
+
+END //
+
+DELIMITER ;
